@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace Assignment3
 {
-    public class MyCache
+    public class MyCache<T>
     {
-        private static Dictionary<string, object> _cache = new Dictionary<string, object>();
+        private static Dictionary<string, WeakReference> _cache = new Dictionary<string, WeakReference>();
 
         public void Add(string key, object cacheItem)
         {
-            _cache.Add(key, cacheItem);
+            _cache.Add(key, new WeakReference(cacheItem));
         }
 
         public object this[string key]
@@ -32,20 +32,26 @@ namespace Assignment3
             _cache.Remove(key);
         }
 
-        public object GetItem(string key)
+        public void ClearAll()
+        {
+            _cache = new Dictionary<string, WeakReference>();
+        }
+
+        public T GetItem(string key)
         {
             if(_cache != null && _cache.ContainsKey(key))
             {
-                return _cache[key];
+                return (T)_cache[key].Target;
             }
-            return string.Format("Key not found: {0}", key);
+            //return default(T);
+            throw new Exception("Key not found");
         }
 
         public void Upsert(string key, object cacheItem)
         {
             if (_cache.ContainsKey(key))
             {
-                _cache[key] = cacheItem;
+                _cache[key] = new WeakReference(cacheItem);
             }
             else
             {
